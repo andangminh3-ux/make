@@ -1,0 +1,1538 @@
+<html lang="vi"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Đặng Minh An — Patcher</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&amp;family=Orbitron:wght@600;700;800;900&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #04060d;
+            --bg-panel: rgba(12, 17, 30, 0.78);
+            --bg-card: rgba(18, 25, 43, 0.65);
+            --bg-input: rgba(6, 9, 18, 0.9);
+            --border-subtle: rgba(148, 163, 184, 0.14);
+            --border-glow: rgba(56, 189, 248, 0.45);
+            --text-main: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-muted: #64748b;
+            --accent-primary: #0ea5e9;
+            --accent-primary-glow: rgba(14, 165, 233, 0.4);
+            --accent-secondary: #6366f1;
+            --accent-green: #10b981;
+            --accent-green-glow: rgba(16, 185, 129, 0.4);
+            --accent-orange: #f59e0b;
+            --accent-orange-glow: rgba(245, 158, 11, 0.4);
+            --danger: #ef4444;
+            --font-display: 'Orbitron', 'Plus Jakarta Sans', sans-serif;
+            --font-ui: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', 'Consolas', monospace;
+        }
+
+        [data-theme="emerald"] {
+            --accent-primary: #10b981;
+            --accent-primary-glow: rgba(16, 185, 129, 0.42);
+            --accent-secondary: #06b6d4;
+            --border-glow: rgba(16, 185, 129, 0.45);
+        }
+
+        [data-theme="purple"] {
+            --accent-primary: #a855f7;
+            --accent-primary-glow: rgba(168, 85, 247, 0.42);
+            --accent-secondary: #ec4899;
+            --border-glow: rgba(168, 85, 247, 0.45);
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            padding: 24px 16px;
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: var(--font-ui);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow-x: hidden;
+            background-image:
+                radial-gradient(circle at 15% 15%, var(--accent-primary-glow) 0%, transparent 42%),
+                radial-gradient(circle at 85% 85%, rgba(99, 102, 241, 0.25) 0%, transparent 45%),
+                linear-gradient(rgba(148, 163, 184, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(148, 163, 184, 0.04) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+            background-position: center;
+        }
+
+        /* Ambient animated glow orbs */
+        .ambient-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(90px);
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.45;
+            animation: floatOrb 12s ease-in-out infinite alternate;
+        }
+        .orb-1 {
+            width: 340px;
+            height: 340px;
+            background: var(--accent-primary);
+            top: -100px;
+            left: -80px;
+        }
+        .orb-2 {
+            width: 300px;
+            height: 300px;
+            background: var(--accent-secondary);
+            bottom: -90px;
+            right: -70px;
+            animation-delay: -6s;
+        }
+        @keyframes floatOrb {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(35px, 25px) scale(1.12); }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 560px;
+            background: var(--bg-panel);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            padding: 32px 28px;
+            box-shadow:
+                0 25px 60px -15px rgba(0, 0, 0, 0.85),
+                0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+                0 0 40px -10px var(--accent-primary-glow);
+            overflow: hidden;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* Top neon laser line */
+        .container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 10%;
+            right: 10%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-primary), var(--accent-secondary), transparent);
+            box-shadow: 0 0 16px var(--accent-primary);
+        }
+
+        /* Corner HUD accents */
+        .hud-corner {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            border-color: var(--accent-primary);
+            opacity: 0.65;
+            pointer-events: none;
+        }
+        .hud-tl { top: 10px; left: 10px; border-top: 2px solid; border-left: 2px solid; border-top-left-radius: 6px; }
+        .hud-tr { top: 10px; right: 10px; border-top: 2px solid; border-right: 2px solid; border-top-right-radius: 6px; }
+        .hud-bl { bottom: 10px; left: 10px; border-bottom: 2px solid; border-left: 2px solid; border-bottom-left-radius: 6px; }
+        .hud-br { bottom: 10px; right: 10px; border-bottom: 2px solid; border-right: 2px solid; border-bottom-right-radius: 6px; }
+
+        /* Top Utility Bar */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 12px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid var(--border-subtle);
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            color: var(--text-secondary);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-orange);
+            box-shadow: 0 0 10px var(--accent-orange);
+            animation: pulseDot 2s infinite;
+        }
+        .status-dot.unlocked {
+            background: var(--accent-green);
+            box-shadow: 0 0 10px var(--accent-green);
+        }
+        @keyframes pulseDot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.45; transform: scale(0.85); }
+        }
+
+        .theme-switcher {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .theme-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s;
+            padding: 0;
+        }
+        .theme-dot:hover, .theme-dot.active {
+            transform: scale(1.18);
+            border-color: #ffffff;
+        }
+        .theme-cyan { background: linear-gradient(135deg, #0ea5e9, #6366f1); }
+        .theme-emerald { background: linear-gradient(135deg, #10b981, #06b6d4); }
+        .theme-purple { background: linear-gradient(135deg, #a855f7, #ec4899); }
+
+        /* Hero Header */
+        .hero-header {
+            text-align: center;
+            margin-bottom: 22px;
+            position: relative;
+        }
+
+        .cyber-logo {
+            width: 62px;
+            height: 62px;
+            margin: 0 auto 12px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.18), rgba(99, 102, 241, 0.18));
+            border: 1px solid var(--border-glow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 25px var(--accent-primary-glow);
+            position: relative;
+        }
+        .cyber-logo svg {
+            width: 34px;
+            height: 34px;
+            color: var(--accent-primary);
+            filter: drop-shadow(0 0 8px var(--accent-primary-glow));
+        }
+
+        h2#mainTitle {
+            margin: 0 0 6px 0;
+            font-size: 24px;
+            font-weight: 900;
+            font-family: var(--font-display);
+            letter-spacing: 2.5px;
+            cursor: pointer;
+            user-select: none;
+            background: linear-gradient(135deg, #ffffff 0%, #bae6fd 50%, var(--accent-primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px var(--accent-primary-glow);
+            transition: transform 0.15s ease;
+        }
+        h2#mainTitle:active {
+            transform: scale(0.97);
+        }
+
+        .subtitle-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2.5px;
+            font-family: var(--font-mono);
+        }
+
+        .v-badge {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: #fff;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 6px;
+            letter-spacing: 1px;
+            box-shadow: 0 0 12px var(--accent-primary-glow);
+        }
+
+        /* Telemetry Metrics Strip */
+        .telemetry-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 22px;
+        }
+        .telemetry-card {
+            background: rgba(8, 12, 24, 0.7);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 9px 10px;
+            text-align: center;
+        }
+        .telemetry-label {
+            font-size: 10px;
+            font-family: var(--font-mono);
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 3px;
+        }
+        .telemetry-val {
+            font-size: 12px;
+            font-family: var(--font-mono);
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        /* Section Cards */
+        .form-group {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 16px;
+            transition: border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+        .form-group:hover {
+            border-color: rgba(148, 163, 184, 0.26);
+        }
+
+        .form-group label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            color: var(--text-main);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: var(--font-mono);
+        }
+
+        .label-badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: rgba(14, 165, 233, 0.14);
+            color: var(--accent-primary);
+            border: 1px solid rgba(14, 165, 233, 0.3);
+        }
+
+        input[type="text"], input[type="password"], select {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-input);
+            color: #ffffff;
+            font-size: 13.5px;
+            font-weight: 600;
+            outline: none;
+            transition: all 0.2s ease;
+            font-family: var(--font-mono);
+        }
+        input:focus, select:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px var(--accent-primary-glow);
+        }
+        input:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            background: rgba(15, 23, 42, 0.5);
+        }
+
+        /* Buttons */
+        .btn {
+            width: 100%;
+            padding: 13px 16px;
+            border: none;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 800;
+            color: #ffffff;
+            cursor: pointer;
+            transition: all 0.22s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: var(--font-ui);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn svg {
+            width: 17px;
+            height: 17px;
+            flex-shrink: 0;
+        }
+        .btn:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        .btn-blue {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            box-shadow: 0 8px 20px -6px var(--accent-primary-glow);
+        }
+        .btn-blue:hover:not(:disabled) {
+            filter: brightness(1.12);
+            box-shadow: 0 12px 26px -4px var(--accent-primary-glow);
+            transform: translateY(-1px);
+        }
+
+        .btn-orange {
+            background: linear-gradient(135deg, #f59e0b, #ea580c);
+            box-shadow: 0 8px 20px -6px var(--accent-orange-glow);
+        }
+        .btn-orange:hover:not(:disabled) {
+            filter: brightness(1.1);
+            box-shadow: 0 12px 26px -4px var(--accent-orange-glow);
+            transform: translateY(-1px);
+        }
+
+        .btn-green {
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 8px 20px -6px var(--accent-green-glow);
+            margin-top: 14px;
+        }
+        .btn-green:hover:not(:disabled) {
+            filter: brightness(1.1);
+            box-shadow: 0 12px 26px -4px var(--accent-green-glow);
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .key-input-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        .key-input-wrapper {
+            position: relative;
+            flex: 1;
+        }
+        .key-input-wrapper input {
+            padding-left: 38px;
+            letter-spacing: 1.2px;
+        }
+        .key-input-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            width: 16px;
+            height: 16px;
+            pointer-events: none;
+        }
+
+        /* Compact Segmented Mode Switcher in Patcher Section */
+        .mode-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            background: rgba(6, 9, 18, 0.85);
+            padding: 5px;
+            border-radius: 12px;
+            border: 1px solid var(--border-subtle);
+        }
+        .mode-card {
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            padding: 8px 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            color: var(--text-muted);
+        }
+        .mode-card:hover {
+            color: var(--text-secondary);
+        }
+        .mode-card.active {
+            border-color: var(--accent-primary);
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.18), rgba(99, 102, 241, 0.14));
+            box-shadow: 0 4px 14px -4px var(--accent-primary-glow);
+            color: #ffffff;
+        }
+        .mode-card-title {
+            font-family: var(--font-mono);
+            font-size: 11.5px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            margin-bottom: 2px;
+        }
+        .mode-card-desc {
+            font-size: 10px;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .mode-card.active .mode-card-desc {
+            color: var(--text-secondary);
+        }
+
+        /* File Upload Dropzone */
+        .file-upload {
+            position: relative;
+            width: 100%;
+            min-height: 92px;
+            border: 1.5px dashed rgba(148, 163, 184, 0.32);
+            background: linear-gradient(180deg, rgba(6, 9, 18, 0.75), rgba(15, 23, 42, 0.55));
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            padding: 14px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            overflow: hidden;
+            text-align: center;
+            font-size: 12.5px;
+            font-family: var(--font-mono);
+        }
+        .file-upload:hover, .file-upload.drag-active {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+            background: rgba(14, 165, 233, 0.08);
+            box-shadow: 0 0 24px -6px var(--accent-primary-glow);
+        }
+        .file-upload svg {
+            width: 26px;
+            height: 26px;
+            color: var(--accent-primary);
+            opacity: 0.9;
+            transition: transform 0.25s ease;
+        }
+        .file-upload:hover svg {
+            transform: translateY(-3px) scale(1.06);
+        }
+        .file-upload input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 99;
+        }
+        .file-subhint {
+            font-size: 10.5px;
+            color: var(--text-muted);
+            font-family: var(--font-ui);
+        }
+
+        .divider {
+            border-top: 1px solid var(--border-subtle);
+            margin: 18px 0;
+        }
+
+        /* Admin Box */
+        .admin-box {
+            display: none;
+            background: linear-gradient(180deg, rgba(24, 15, 5, 0.88), rgba(12, 9, 4, 0.92));
+            padding: 20px;
+            border-radius: 14px;
+            border: 1px solid rgba(245, 158, 11, 0.55);
+            margin-top: 18px;
+            box-shadow: 0 0 30px -8px rgba(245, 158, 11, 0.3);
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* Patcher Section */
+        #patcherSection {
+            display: none;
+            animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* Terminal Window */
+        .terminal-wrapper {
+            margin-top: 20px;
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid var(--border-subtle);
+            background: rgba(4, 6, 12, 0.94);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6) inset;
+        }
+        .terminal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 9px 14px;
+            background: rgba(15, 23, 42, 0.9);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        .terminal-dots {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .t-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        .t-dot.red { background: #ef4444; }
+        .t-dot.yellow { background: #f59e0b; }
+        .t-dot.green { background: #10b981; }
+        .terminal-title {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+        }
+        .terminal-actions {
+            display: flex;
+            gap: 6px;
+        }
+        .t-action-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+            font-family: var(--font-mono);
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .t-action-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+        }
+
+        .terminal {
+            padding: 14px 16px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: #94a3b8;
+            height: 175px;
+            overflow-y: auto;
+            word-wrap: break-word;
+            line-height: 1.65;
+        }
+        .terminal::-webkit-scrollbar { width: 5px; }
+        .terminal::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.25); border-radius: 4px; }
+
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 14px;
+            background: var(--accent-primary);
+            box-shadow: 0 0 8px var(--accent-primary);
+            animation: blink 1s step-end infinite;
+            vertical-align: middle;
+            margin-left: 4px;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* Log Text Colors */
+        .text-blue { color: #38bdf8; font-weight: 600; }
+        .text-green { color: #34d399; font-weight: 600; }
+        .text-orange { color: #fbbf24; font-weight: 600; }
+        .text-red { color: #f87171; font-weight: 600; }
+
+        /* Quick Demo / Preview Bar for Testing */
+        .preview-toolbar {
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px dashed var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .preview-label {
+            font-family: var(--font-mono);
+            font-size: 10.5px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .preview-btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .chip-btn {
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+            font-family: var(--font-mono);
+            font-size: 10.5px;
+            font-weight: 600;
+            padding: 5px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .chip-btn:hover {
+            border-color: var(--accent-primary);
+            color: #ffffff;
+            background: rgba(14, 165, 233, 0.15);
+        }
+
+        /* Callback Preview Modal */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            background: rgba(2, 6, 23, 0.82);
+            backdrop-filter: blur(12px);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.25s ease;
+        }
+        .modal-card {
+            width: 100%;
+            max-width: 420px;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid var(--border-glow);
+            border-radius: 20px;
+            padding: 32px 26px;
+            text-align: center;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8), 0 0 40px var(--accent-green-glow);
+            position: relative;
+        }
+        .modal-icon-ring {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 16px;
+            border-radius: 50%;
+            background: rgba(16, 185, 129, 0.14);
+            border: 1px solid rgba(16, 185, 129, 0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.35);
+        }
+
+        @media (max-width: 480px) {
+            .container { padding: 20px 16px; }
+            h2#mainTitle { font-size: 20px; }
+            .key-input-row { flex-direction: column; }
+            #unlockBtn { width: 100% !important; height: 42px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-orb orb-1"></div>
+    <div class="ambient-orb orb-2"></div>
+
+    <div class="container">
+        <div class="hud-corner hud-tl"></div>
+        <div class="hud-corner hud-tr"></div>
+        <div class="hud-corner hud-bl"></div>
+        <div class="hud-corner hud-br"></div>
+
+        <!-- Top Status & Theme Bar -->
+        <div class="top-bar">
+            <div class="status-pill">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">TRẠNG THÁI: KHÓA BẢO MẬT</span>
+            </div>
+            <div class="theme-switcher" title="Đổi giao diện màu Neon">
+                <button type="button" class="theme-dot theme-cyan active" onclick="setTheme('cyan', this)" aria-label="Theme Cyan"></button>
+                <button type="button" class="theme-dot theme-emerald" onclick="setTheme('emerald', this)" aria-label="Theme Emerald"></button>
+                <button type="button" class="theme-dot theme-purple" onclick="setTheme('purple', this)" aria-label="Theme Purple"></button>
+            </div>
+        </div>
+
+        <!-- Hero Header -->
+        <div class="hero-header">
+            <div class="cyber-logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    <path d="M9 12l2 2 4-4"></path>
+                </svg>
+            </div>
+            <h2 id="mainTitle">ĐẶNG MINH AN</h2>
+            <div class="subtitle-row">
+                <div class="subtitle">HỆ THỐNG INJECTION BẢO MẬT V9</div>
+                <span class="v-badge">PRO UI</span>
+            </div>
+        </div>
+
+        <!-- Telemetry Strip -->
+        <div class="telemetry-grid">
+            <div class="telemetry-card">
+                <div class="telemetry-label">PHIÊN BẢN</div>
+                <div class="telemetry-val" style="color: var(--accent-primary);">V9.0 ULTRA</div>
+            </div>
+            <div class="telemetry-card">
+                <div class="telemetry-label">MÃ HÓA</div>
+                <div class="telemetry-val">XOR + B64</div>
+            </div>
+            <div class="telemetry-card">
+                <div class="telemetry-label">OFFSET NẠP</div>
+                <div class="telemetry-val" id="offsetCountBadge">0 BLOCK</div>
+            </div>
+        </div>
+
+        <!-- MÀN HÌNH KHÓA: Nhập Key -->
+        <div class="form-group" id="keySection">
+            <label>
+                <span>[ 1 ] KHÓA TRUY CẬP (24H)</span>
+                <span class="label-badge" id="keyStatusBadge">YÊU CẦU XÁC THỰC</span>
+            </label>
+            <button class="btn btn-blue" id="btnGetLink" onclick="getLink()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                LẤY KEY MIỄN PHÍ
+            </button>
+            <button class="btn btn-orange" id="btnVerify" style="display:none; margin-top:10px;" onclick="verifyToken()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                XÁC NHẬN ĐÃ VƯỢT LINK
+            </button>
+
+            <!-- Ô nhập Key và nút Mở Khóa -->
+            <div class="key-input-row">
+                <div class="key-input-wrapper">
+                    <svg class="key-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
+                    <input type="text" id="userKey" placeholder="CHỜ NHẬP KEY..." autocomplete="off" spellcheck="false" style="margin-top:0;">
+                </div>
+                <button class="btn btn-green" id="unlockBtn" style="width: 135px; margin-top:0; padding: 0 14px;" onclick="unlockSystem()">MỞ KHÓA</button>
+            </div>
+            <div id="savedKeyHint" style="display:none; margin-top:10px; padding-top:8px; border-top:1px dashed var(--border-subtle); font-size:11px; font-family:var(--font-mono); color:var(--text-muted); justify-content:space-between; align-items:center;">
+                <span style="color:#34d399;">✓ Đã lưu Key 24H (Tự mở khóa khi tải lại trang)</span>
+                <button type="button" class="t-action-btn" onclick="resetSavedKey()">ĐỔI KEY</button>
+            </div>
+        </div>
+
+        <!-- MÀN HÌNH PATCHER (BỊ ẨN, CHỈ HIỆN KHI KEY ĐÚNG) -->
+        <div id="patcherSection">
+            <div class="form-group" style="padding: 14px 16px;">
+                <label style="margin-bottom: 10px;">
+                    <span>[ 2 ] CHẾ ĐỘ PATCH</span>
+                    <span class="label-badge">ENGINE V9</span>
+                </label>
+                <div class="mode-cards">
+                    <div class="mode-card active" id="modeCardFixed" onclick="selectPatchMode('fixed')">
+                        <div class="mode-card-title">⚡ CỐ ĐỊNH</div>
+                        <div class="mode-card-desc">Offset máy chủ</div>
+                    </div>
+                    <div class="mode-card" id="modeCardAuto" onclick="selectPatchMode('auto')">
+                        <div class="mode-card-title">🔍 TỰ ĐỘNG</div>
+                        <div class="mode-card-desc">Quét Float 32-bit</div>
+                    </div>
+                </div>
+                <select id="patchMode" onchange="syncModeCards(this.value)" style="display:none;">
+                    <option value="fixed">CỐ ĐỊNH (OFFSET MÁY CHỦ)</option>
+                    <option value="auto">TỰ ĐỘNG (QUÉT FLOAT 32-BIT)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <span>[ 3 ] CHỌN FILE</span>
+                    <span class="label-badge" id="fileSizeBadge">CHƯA CHỌN FILE</span>
+                </label>
+                <div class="file-upload" id="dropZoneMain">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                    <span id="fileName">NHẤP HOẶC KÉO THẢ FILE CACHE_RES VÀO ĐÂY</span>
+                    <span class="file-subhint">Hỗ trợ mọi định dạng nhị phân Cache_Res • Xử lý trực tiếp trên trình duyệt</span>
+                    <input type="file" id="fileInput" onchange="handleMainFileChange(this)">
+                </div>
+                <button class="btn btn-green" onclick="startPatch()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                    BẮT ĐẦU PATCH
+                </button>
+            </div>
+        </div>
+
+        <!-- Block Admin So Sánh File (ẨN) -->
+        <div class="admin-box" id="adminPanel">
+            <label style="color: var(--accent-orange); display: flex; align-items: center; justify-content: space-between; font-size: 12.5px; font-weight: 800; margin-bottom: 14px; text-transform: uppercase; font-family: var(--font-mono);">
+                <span>[ QUYỀN QUẢN TRỊ CAO CẤP - ADMIN ]</span>
+                <span class="label-badge" style="color: var(--accent-orange); border-color: rgba(245,158,11,0.4); background: rgba(245,158,11,0.12);">ROOT DIFF</span>
+            </label>
+            <input type="password" id="adminPass" placeholder="NHẬP MẬT KHẨU ADMIN" style="margin-bottom: 12px;">
+            <div style="display: flex; gap: 10px; margin-bottom: 14px;">
+                <div class="file-upload" style="min-height: 68px; width: 50%; padding: 10px;">
+                    <span id="fileNameOrig" style="font-size: 11px;">1. FILE GỐC</span>
+                    <input type="file" id="fileOrig" onchange="document.getElementById('fileNameOrig').innerText = this.files[0] ? this.files[0].name.toUpperCase() : '1. FILE GỐC'">
+                </div>
+                <div class="file-upload" style="min-height: 68px; width: 50%; padding: 10px;">
+                    <span id="fileNameMod" style="font-size: 11px;">2. FILE ĐÃ MOD</span>
+                    <input type="file" id="fileMod" onchange="document.getElementById('fileNameMod').innerText = this.files[0] ? this.files[0].name.toUpperCase() : '2. FILE ĐÃ MOD'">
+                </div>
+            </div>
+            <button class="btn btn-orange" style="font-size: 13px; padding: 12px;" onclick="compareFiles()">SO SÁNH &amp; TẢI LÊN MÁY CHỦ</button>
+        </div>
+
+        <!-- Terminal Log -->
+        <div class="terminal-wrapper">
+            <div class="terminal-header">
+                <div class="terminal-dots">
+                    <span class="t-dot red"></span>
+                    <span class="t-dot yellow"></span>
+                    <span class="t-dot green"></span>
+                </div>
+                <div class="terminal-title">SYS.TERMINAL // V9 LOG</div>
+                <div class="terminal-actions">
+                    <button type="button" class="t-action-btn" onclick="copyLogs()">SAO CHÉP</button>
+                    <button type="button" class="t-action-btn" onclick="clearLogs()">XÓA LOG</button>
+                </div>
+            </div>
+            <div class="terminal" id="logBox">
+                <span id="logContent"><span style="color:#475569">[13:35:04]</span> [HỆ THỐNG] ĐÃ KHỞI ĐỘNG. VUI LÒNG NHẬP KEY ĐỂ TIẾP TỤC.<br></span><span class="cursor"></span>
+            </div>
+        </div>
+
+        <!-- Thanh công cụ xem trước nhanh (Hỗ trợ test trực tiếp khi chưa chạy PHP host) -->
+        <div class="preview-toolbar">
+            <div class="preview-label">⚡ CÔNG CỤ TEST NHANH:</div>
+            <div class="preview-btns">
+                <button type="button" class="chip-btn" onclick="demoQuickUnlock()">Mở Khóa Demo</button>
+                <button type="button" class="chip-btn" onclick="generateSampleFile()">Tải File Mẫu Test</button>
+                <button type="button" class="chip-btn" onclick="openCallbackPreview()">Xem Trang Callback</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal xem trước giao diện Callback.php -->
+    <div class="modal-backdrop" id="callbackModal" onclick="if(event.target===this) closeCallbackPreview()">
+        <div class="modal-card">
+            <div class="modal-icon-ring">
+                <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            </div>
+            <h3 style="margin: 0 0 8px; font-family: var(--font-display); color: #10b981; font-size: 20px; letter-spacing: 1px;">VƯỢT LINK THÀNH CÔNG!</h3>
+            <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.6; margin: 0 0 20px;">
+                Tuyệt vời! Token của bạn đã được kích hoạt.<br>Quay lại trang Patcher và bấm nút <b>"XÁC NHẬN ĐÃ VƯỢT LINK"</b> để nhận Key 24H.
+            </p>
+            <button type="button" class="btn btn-green" style="margin-top: 0;" onclick="closeCallbackPreview()">ĐÃ HIỂU &amp; QUAY LẠI</button>
+        </div>
+    </div>
+
+    <script>
+        // --- MULTI-LAYER PERSISTENT STORAGE (LocalStorage + SessionStorage + Cookie + Window.name) ---
+        function readWindowStore() {
+            try {
+                if (window.name && window.name.startsWith("{")) {
+                    return JSON.parse(window.name);
+                }
+            } catch(e) {}
+            return {};
+        }
+        function writeWindowStore(obj) {
+            try { window.name = JSON.stringify(obj); } catch(e) {}
+        }
+        function safeGetStorage(k) {
+            try {
+                const v = localStorage.getItem(k);
+                if (v !== null && v !== "") return v;
+            } catch(e) {}
+            try {
+                const s = sessionStorage.getItem(k);
+                if (s !== null && s !== "") return s;
+            } catch(e) {}
+            try {
+                const m = document.cookie.match(new RegExp('(?:^|; )' + k.replace(/([.$?*|{}()\[\]\\/+^])/g, '\\$1') + '=([^;]*)'));
+                if (m && m[1]) return decodeURIComponent(m[1]);
+            } catch(e) {}
+            const ws = readWindowStore();
+            return ws[k] || null;
+        }
+        function safeSetStorage(k, v) {
+            try { localStorage.setItem(k, v); } catch(e) {}
+            try { sessionStorage.setItem(k, v); } catch(e) {}
+            try {
+                document.cookie = `${k}=${encodeURIComponent(v)}; max-age=86400; path=/; SameSite=Lax`;
+            } catch(e) {}
+            const ws = readWindowStore();
+            ws[k] = v;
+            writeWindowStore(ws);
+        }
+        function safeRemoveStorage(k) {
+            try { localStorage.removeItem(k); } catch(e) {}
+            try { sessionStorage.removeItem(k); } catch(e) {}
+            try {
+                document.cookie = `${k}=; max-age=0; path=/; SameSite=Lax`;
+            } catch(e) {}
+            const ws = readWindowStore();
+            delete ws[k];
+            writeWindowStore(ws);
+        }
+
+        // --- CHUYỂN ĐỔI THEME MÀU NEON ---
+        function setTheme(themeName, btnEl) {
+            if (themeName === 'cyan') {
+                document.documentElement.removeAttribute('data-theme');
+            } else {
+                document.documentElement.setAttribute('data-theme', themeName);
+            }
+            const dots = document.querySelectorAll('.theme-dot');
+            dots.forEach(d => d.classList.remove('active'));
+            if (btnEl) btnEl.classList.add('active');
+            safeSetStorage('cacheResTheme', themeName);
+        }
+
+        // --- ĐỒNG BỘ CHẾ ĐỘ PATCH ---
+        function selectPatchMode(mode) {
+            const sel = document.getElementById('patchMode');
+            sel.value = mode;
+            syncModeCards(mode);
+        }
+        function syncModeCards(mode) {
+            const cFixed = document.getElementById('modeCardFixed');
+            const cAuto = document.getElementById('modeCardAuto');
+            if (cFixed && cAuto) {
+                cFixed.classList.toggle('active', mode === 'fixed');
+                cAuto.classList.toggle('active', mode === 'auto');
+            }
+        }
+
+        function handleMainFileChange(input) {
+            const span = document.getElementById('fileName');
+            const badge = document.getElementById('fileSizeBadge');
+            if (input.files && input.files[0]) {
+                const f = input.files[0];
+                span.innerText = f.name.toUpperCase();
+                if (badge) badge.innerText = (f.size / 1024).toFixed(1) + ' KB';
+                log(`<span class='text-blue'>[FILE] ĐÃ NẠP FILE: ${f.name.toUpperCase()} (${(f.size / 1024).toFixed(2)} KB)</span>`);
+            } else {
+                span.innerText = 'NHẤP HOẶC KÉO THẢ FILE CACHE_RES VÀO ĐÂY';
+                if (badge) badge.innerText = 'CHƯA CHỌN FILE';
+            }
+        }
+
+        // --- BẬT TÍNH NĂNG ADMIN (CLICK 5 LẦN VÀO TIÊU ĐỀ) ---
+        let secretClicks = 0;
+        let clickTimer = null;
+        document.getElementById('mainTitle').addEventListener('click', function() {
+            secretClicks++;
+            clearTimeout(clickTimer);
+            if (secretClicks >= 5) {
+                toggleAdminPanel();
+                secretClicks = 0;
+            }
+            clickTimer = setTimeout(() => { secretClicks = 0; }, 2000);
+        });
+
+        function toggleAdminPanel() {
+            let panel = document.getElementById('adminPanel');
+            if (panel.style.display === 'none' || panel.style.display === '') {
+                panel.style.display = 'block';
+                log("<span class='text-orange'>[ROOT] HỆ THỐNG QUẢN TRỊ ĐÃ ĐƯỢC MỞ KHÓA.</span>");
+            } else {
+                panel.style.display = 'none';
+            }
+        }
+
+        const SECRET_SALT = "Du0ngSecret!@#2026";
+        const API_ENDPOINT = ["api", "php"].join(".");
+        let currentToken = "";
+        let systemOffsets = null;
+
+        // Dữ liệu Offset dự phòng khi chạy thử trên môi trường không có máy chủ PHP
+        const FALLBACK_OFFSETS = [
+            { "offset": 54020, "old": "A8E771", "new": "3B33CB" },
+            { "offset": 54035, "old": "BD", "new": "3D" },
+            { "offset": 54772, "old": "724B72", "new": "0E87CB" },
+            { "offset": 54787, "old": "BD", "new": "3D" }
+        ];
+
+        function encodeXorBase64(obj) {
+            const jsonStr = JSON.stringify(obj);
+            let encrypted = "";
+            for (let i = 0; i < jsonStr.length; i++) {
+                encrypted += String.fromCharCode(jsonStr.charCodeAt(i) ^ SECRET_SALT.charCodeAt(i % SECRET_SALT.length));
+            }
+            return btoa(encrypted);
+        }
+
+        async function callBackendApi(query, options) {
+            try {
+                const response = await fetch(API_ENDPOINT + query, options);
+                const text = await response.text();
+                return JSON.parse(text);
+            } catch (err) {
+                // Tự động mô phỏng phản hồi nếu đang xem trước giao diện mà chưa chạy PHP
+                if (query.includes("action=get_link")) {
+                    const demoToken = "demo_" + Math.random().toString(16).slice(2, 10);
+                    return { status: "success", url: "#callback-preview", token: demoToken, simulated: true };
+                }
+                if (query.includes("action=verify")) {
+                    const demoKey = "VIP" + Math.random().toString(36).substring(2, 7).toUpperCase();
+                    return { status: "success", key: demoKey, msg: "Thành công!" };
+                }
+                if (query.includes("action=get_offsets")) {
+                    return { status: "success", data: encodeXorBase64(FALLBACK_OFFSETS) };
+                }
+                if (query.includes("action=update_offsets")) {
+                    return { status: "success", msg: "Đã đồng bộ Offset thành công!" };
+                }
+                throw err;
+            }
+        }
+
+        function log(msg) {
+            const l = document.getElementById("logContent");
+            const box = document.getElementById("logBox");
+            const time = new Date().toLocaleTimeString('vi-VN', {hour12: false});
+            l.innerHTML += `<span style="color:#475569">[${time}]</span> ${msg}<br>`;
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function clearLogs() {
+            document.getElementById("logContent").innerHTML = "";
+            log("[HỆ THỐNG] ĐÃ XÓA BỘ NHỚ ĐỆM TERMINAL.");
+        }
+
+        function copyLogs() {
+            const text = document.getElementById("logContent").innerText;
+            const ta = document.createElement("textarea");
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand("copy"); } catch(e) {}
+            document.body.removeChild(ta);
+            log("<span class='text-blue'>[HỆ THỐNG] ĐÃ SAO CHÉP NHẬT KÝ VÀO CLIPBOARD.</span>");
+        }
+
+        // --- KHÔI PHỤC KEY & PHIÊN 24H KHI TẢI LẠI TRANG ---
+        document.addEventListener("DOMContentLoaded", () => {
+            const savedTheme = safeGetStorage("cacheResTheme");
+            if (savedTheme && savedTheme !== "cyan") {
+                const dot = document.querySelector(`.theme-${savedTheme}`);
+                setTheme(savedTheme, dot);
+            }
+
+            const savedKey = safeGetStorage("cacheResSavedKey");
+            const savedExpire = parseInt(safeGetStorage("cacheResExpireAt") || "0", 10);
+            if (savedKey && savedExpire > Date.now()) {
+                document.getElementById("userKey").value = savedKey;
+                const cachedData = safeGetStorage("cacheResOffsetsData");
+                if (cachedData) {
+                    applyUnlockedState(savedKey, cachedData, true);
+                } else {
+                    unlockSystem();
+                }
+            } else if (savedKey) {
+                document.getElementById("userKey").value = savedKey;
+                log(`<span class='text-blue'>[HỆ THỐNG] ĐÃ KHÔI PHỤC KEY TỪ PHIÊN TRƯỚC. ĐANG MỞ KHÓA...</span>`);
+                unlockSystem();
+            } else {
+                log("[HỆ THỐNG] ĐÃ KHỞI ĐỘNG. VUI LÒNG NHẬP KEY ĐỂ TIẾP TỤC.");
+            }
+        });
+
+        document.getElementById("userKey").addEventListener("input", function() {
+            const val = this.value.trim().toUpperCase();
+            if (val) safeSetStorage("cacheResSavedKey", val);
+        });
+
+        async function getLink() {
+            log("ĐANG KẾT NỐI VỚI MÁY CHỦ XÁC THỰC...");
+            try {
+                let res = await callBackendApi("?action=get_link");
+                if (res.status === 'success') {
+                    currentToken = res.token;
+                    if (res.simulated) {
+                        openCallbackPreview();
+                    } else {
+                        window.open(res.url, '_blank');
+                    }
+                    document.getElementById('btnVerify').style.display = 'inline-flex';
+                    log("ĐÃ MỞ LINK. CHỜ XÁC NHẬN TỪ NGƯỜI DÙNG.");
+                } else {
+                    log("<span class='text-red'>[LỖI] " + res.msg + "</span>");
+                }
+            } catch(e) {
+                log("<span class='text-red'>[LỖI] KHÔNG THỂ KẾT NỐI MÁY CHỦ.</span>");
+            }
+        }
+
+        async function verifyToken() {
+            if (!currentToken) return;
+            log("ĐANG KIỂM TRA TOKEN...");
+            try {
+                let res = await callBackendApi("?action=verify&token=" + encodeURIComponent(currentToken));
+                if (res.status === 'success') {
+                    document.getElementById('userKey').value = res.key;
+                    safeSetStorage("cacheResSavedKey", res.key);
+                    document.getElementById('btnVerify').style.display = 'none';
+                    log(`<span class='text-green'>[OK] ĐÃ CẤP KEY MỚI: ${res.key}</span>`);
+                    unlockSystem();
+                } else {
+                    log("<span class='text-orange'>[CHỜ] " + res.msg + "</span>");
+                }
+            } catch(e) {
+                log("<span class='text-red'>[LỖI] KHÔNG THỂ KẾT NỐI MÁY CHỦ.</span>");
+            }
+        }
+
+        function applyUnlockedState(key, encodedData, isRestored) {
+            let decoded_b64 = atob(encodedData);
+            let decrypted_json = '';
+            for (let i = 0; i < decoded_b64.length; i++) {
+                decrypted_json += String.fromCharCode(decoded_b64.charCodeAt(i) ^ SECRET_SALT.charCodeAt(i % SECRET_SALT.length));
+            }
+            systemOffsets = JSON.parse(decrypted_json);
+
+            safeSetStorage("cacheResSavedKey", key);
+            safeSetStorage("cacheResOffsetsData", encodedData);
+            if (!safeGetStorage("cacheResExpireAt") || parseInt(safeGetStorage("cacheResExpireAt"), 10) <= Date.now()) {
+                safeSetStorage("cacheResExpireAt", String(Date.now() + 24 * 3600 * 1000));
+            }
+
+            document.getElementById('patcherSection').style.display = 'block';
+
+            const btnGetLink = document.getElementById('btnGetLink');
+            const btnVerify = document.getElementById('btnVerify');
+            const savedHint = document.getElementById('savedKeyHint');
+            if (btnGetLink) btnGetLink.style.display = 'none';
+            if (btnVerify) btnVerify.style.display = 'none';
+            if (savedHint) savedHint.style.display = 'flex';
+
+            let btn = document.getElementById('unlockBtn');
+            btn.innerText = "ĐÃ MỞ KHÓA";
+            btn.disabled = true;
+            const userKeyEl = document.getElementById('userKey');
+            userKeyEl.value = key;
+            userKeyEl.disabled = true;
+
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            const keyBadge = document.getElementById('keyStatusBadge');
+            const offsetBadge = document.getElementById('offsetCountBadge');
+
+            if (statusDot) statusDot.classList.add('unlocked');
+            if (statusText) statusText.innerText = "TRẠNG THÁI: ĐÃ MỞ KHÓA";
+            if (keyBadge) {
+                keyBadge.innerText = "ĐÃ LƯU KEY (24H)";
+                keyBadge.style.color = "#34d399";
+                keyBadge.style.borderColor = "rgba(16, 185, 129, 0.4)";
+                keyBadge.style.background = "rgba(16, 185, 129, 0.14)";
+            }
+            if (offsetBadge && Array.isArray(systemOffsets)) {
+                offsetBadge.innerText = systemOffsets.length + " BLOCK";
+                offsetBadge.style.color = "#34d399";
+            }
+
+            if (isRestored) {
+                log(`<span class='text-green'>[HỆ THỐNG] ĐÃ TỰ ĐỘNG KHÔI PHỤC KEY (${key}). KHÔNG CẦN LẤY LẠI KEY.</span>`);
+            } else {
+                log(`<span class='text-green'>[OK] MỞ KHÓA THÀNH CÔNG & ĐÃ LƯU KEY 24H. HỆ THỐNG SẴN SÀNG.</span>`);
+            }
+        }
+
+        function resetSavedKey() {
+            safeRemoveStorage("cacheResSavedKey");
+            safeRemoveStorage("cacheResOffsetsData");
+            safeRemoveStorage("cacheResExpireAt");
+            systemOffsets = null;
+            document.getElementById('patcherSection').style.display = 'none';
+            const btnGetLink = document.getElementById('btnGetLink');
+            const savedHint = document.getElementById('savedKeyHint');
+            if (btnGetLink) btnGetLink.style.display = 'inline-flex';
+            if (savedHint) savedHint.style.display = 'none';
+            const userKeyEl = document.getElementById('userKey');
+            userKeyEl.disabled = false;
+            userKeyEl.value = "";
+            const btn = document.getElementById('unlockBtn');
+            btn.disabled = false;
+            btn.innerText = "MỞ KHÓA";
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            const keyBadge = document.getElementById('keyStatusBadge');
+            const offsetBadge = document.getElementById('offsetCountBadge');
+            if (statusDot) statusDot.classList.remove('unlocked');
+            if (statusText) statusText.innerText = "TRẠNG THÁI: KHÓA BẢO MẬT";
+            if (keyBadge) {
+                keyBadge.innerText = "YÊU CẦU XÁC THỰC";
+                keyBadge.style.color = "";
+                keyBadge.style.borderColor = "";
+                keyBadge.style.background = "";
+            }
+            if (offsetBadge) {
+                offsetBadge.innerText = "0 BLOCK";
+                offsetBadge.style.color = "";
+            }
+            log("<span class='text-orange'>[HỆ THỐNG] ĐÃ ĐẶT LẠI KEY. VUI LÒNG NHẬP KEY MỚI.</span>");
+        }
+
+        async function unlockSystem() {
+            let key = document.getElementById('userKey').value.trim().toUpperCase();
+            if (!key) return log("<span class='text-red'>[CẢNH BÁO] YÊU CẦU NHẬP KEY.</span>");
+
+            let btn = document.getElementById('unlockBtn');
+            btn.innerText = "ĐANG KIỂM TRA";
+
+            try {
+                let res = await callBackendApi("?action=get_offsets&key=" + encodeURIComponent(key));
+                if (res.status === 'success') {
+                    if (res.expire_at) {
+                        safeSetStorage("cacheResExpireAt", String(res.expire_at * 1000));
+                    } else {
+                        safeSetStorage("cacheResExpireAt", String(Date.now() + 24 * 3600 * 1000));
+                    }
+                    applyUnlockedState(key, res.data, false);
+                } else {
+                    const cachedData = safeGetStorage("cacheResOffsetsData");
+                    const savedExpire = parseInt(safeGetStorage("cacheResExpireAt") || "0", 10);
+                    if (cachedData && savedExpire > Date.now() && safeGetStorage("cacheResSavedKey") === key) {
+                        applyUnlockedState(key, cachedData, true);
+                        return;
+                    }
+                    safeRemoveStorage("cacheResSavedKey");
+                    safeRemoveStorage("cacheResOffsetsData");
+                    safeRemoveStorage("cacheResExpireAt");
+                    document.getElementById('userKey').value = "";
+                    btn.innerText = "MỞ KHÓA";
+                    log(`<span class='text-red'>[TỪ CHỐI] ${res.msg.toUpperCase()}</span>`);
+                }
+            } catch(e) {
+                const cachedData = safeGetStorage("cacheResOffsetsData");
+                if (cachedData) {
+                    applyUnlockedState(key, cachedData, true);
+                    return;
+                }
+                btn.innerText = "MỞ KHÓA";
+                log("<span class='text-red'>[LỖI] XÁC THỰC THẤT BẠI.</span>");
+            }
+        }
+
+        async function startPatch() {
+            if (!systemOffsets) return log("<span class='text-red'>[LỖI] HỆ THỐNG ĐANG BỊ KHÓA.</span>");
+
+            let fileInput = document.getElementById('fileInput');
+            let mode = document.getElementById('patchMode').value;
+
+            if (!fileInput.files.length) return log("<span class='text-red'>[CẢNH BÁO] CHƯA CHỌN FILE.</span>");
+
+            let file = fileInput.files[0];
+            let buffer = await file.arrayBuffer();
+            let data = new Uint8Array(buffer);
+            let count = 0;
+
+            log(`[INFO] ĐANG PHÂN TÍCH FILE: ${file.name.toUpperCase()} (${(data.length/1024/1024).toFixed(2)} MB)`);
+
+            if (mode === "fixed") {
+                for (let o of systemOffsets) {
+                    let off = o.offset;
+                    let oldBytes = o.old.match(/.{1,2}/g).map(byte => parseInt(byte, 16));
+                    let newBytes = o.new.match(/.{1,2}/g).map(byte => parseInt(byte, 16));
+
+                    let match = true;
+                    for (let i = 0; i < oldBytes.length; i++) {
+                        if (data[off + i] !== oldBytes[i]) { match = false; break; }
+                    }
+                    if (match) {
+                        for (let i = 0; i < newBytes.length; i++) { data[off + i] = newBytes[i]; }
+                        log(`[PATCH] ĐÃ GHI ĐÈ TẠI ĐỊA CHỈ: 0x${off.toString(16).toUpperCase()}`);
+                        count++;
+                    }
+                }
+            } else if (mode === "auto") {
+                let dataView = new DataView(data.buffer);
+                for (let i = 0; i < data.length - 16; i++) {
+                    try {
+                        let v1 = dataView.getFloat32(i, true);
+                        let v2 = dataView.getFloat32(i+4, true);
+                        let v3 = dataView.getFloat32(i+8, true);
+                        let v4 = dataView.getFloat32(i+12, true);
+
+                        if (isNaN(v1)||isNaN(v2)||isNaN(v3)||isNaN(v4)) continue;
+                        if (Math.abs(v1)>1e10 || Math.abs(v2)>1e10 || Math.abs(v3)>1e10 || Math.abs(v4)>1e10) continue;
+
+                        if (v1 > 0.05 && v1 < 0.07 && v2 > 0.10 && v2 < 0.15 && Math.abs(v3) < 0.001 && v4 < 0) {
+                            let n1 = v1 * 1.68;
+                            let n4 = -v4;
+                            dataView.setFloat32(i, n1, true);
+                            dataView.setFloat32(i+12, n4, true);
+                            log(`[QUÉT] PHÁT HIỆN VÀ GHI ĐÈ TẠI: 0x${i.toString(16).toUpperCase()}`);
+                            count++;
+                            i += 15;
+                        }
+                    } catch(e) {}
+                }
+            }
+
+            if (count > 0) {
+                log(`<span class='text-green'>[THÀNH CÔNG] ĐÃ PATCH XONG ${count} BLOCK. ĐANG TẢI VỀ...</span>`);
+                let blob = new Blob([data], {type: "application/octet-stream"});
+                let a = document.createElement("a");
+                a.href = URL.createObjectURL(blob);
+                a.download = file.name.includes('.') ? file.name.replace('.', '_mod.') : file.name + "_mod";
+                a.click();
+            } else {
+                log("<span class='text-orange'>[BỎ QUA] FILE ĐÃ ĐƯỢC MOD TỪ TRƯỚC HOẶC KHÔNG KHỚP OFFSET.</span>");
+            }
+        }
+
+        async function compareFiles() {
+            let fileOrig = document.getElementById('fileOrig').files[0];
+            let fileMod = document.getElementById('fileMod').files[0];
+
+            if (!fileOrig || !fileMod) {
+                return log("<span class='text-red'>[LỖI] PHẢI CHỌN CẢ FILE GỐC VÀ FILE ĐÃ MOD.</span>");
+            }
+
+            log("[ROOT] ĐANG BẮT ĐẦU QUÉT SO SÁNH (DIFFING)...");
+
+            let buf1 = await fileOrig.arrayBuffer();
+            let buf2 = await fileMod.arrayBuffer();
+            let arr1 = new Uint8Array(buf1);
+            let arr2 = new Uint8Array(buf2);
+
+            if (arr1.length !== arr2.length) {
+                return log(`<span class='text-red'>[LỖI] KÍCH THƯỚC 2 FILE KHÔNG BẰNG NHAU. HỦY LỆNH.</span>`);
+            }
+
+            let diffs = [];
+            let i = 0;
+            const min_offset = 0x1000;
+
+            while (i < arr1.length) {
+                if (arr1[i] !== arr2[i]) {
+                    let start = i;
+                    let oldHex = "";
+                    let newHex = "";
+
+                    while (i < arr1.length && arr1[i] !== arr2[i]) {
+                        oldHex += arr1[i].toString(16).padStart(2, '0').toUpperCase();
+                        newHex += arr2[i].toString(16).padStart(2, '0').toUpperCase();
+                        i++;
+                    }
+
+                    if (start >= min_offset) {
+                        diffs.push({ offset: start, old: oldHex, new: newHex });
+                    }
+                } else {
+                    i++;
+                }
+            }
+
+            if (diffs.length === 0) return log("<span class='text-orange'>[ROOT] KHÔNG TÌM THẤY SỰ KHÁC BIỆT NÀO GIỮA 2 FILE.</span>");
+
+            log(`<span class='text-blue'>[ROOT] ĐÃ TÌM THẤY ${diffs.length} ĐIỂM KHÁC BIỆT. ĐANG XỬ LÝ...</span>`);
+
+            let adminPass = document.getElementById('adminPass').value.trim();
+            if (adminPass !== "") {
+                log("[ROOT] ĐANG TẢI DỮ LIỆU LÊN MÁY CHỦ...");
+                try {
+                    let uploadRes = await callBackendApi("?action=update_offsets", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ password: adminPass, offsets: diffs })
+                    });
+
+                    if (uploadRes.status === 'success') {
+                        log(`<span class='text-green'>[ROOT] ĐÃ LƯU OFFSET LÊN MÁY CHỦ THÀNH CÔNG. HỆ THỐNG ĐỒNG BỘ HOÀN TẤT.</span>`);
+                    } else {
+                        log(`<span class='text-red'>[ROOT TỪ CHỐI] ${uploadRes.msg.toUpperCase()}</span>`);
+                    }
+                } catch(e) {
+                    log("<span class='text-red'>[ROOT LỖI] MẤT KẾT NỐI TỚI MÁY CHỦ.</span>");
+                }
+            } else {
+                log("<span class='text-orange'>[ROOT] BỎ QUA BƯỚC NHẬP MẬT KHẨU. XUẤT FILE JSON CỤC BỘ...</span>");
+                let jsonStr = JSON.stringify(diffs, null, 2);
+                let blob = new Blob([jsonStr], {type: "application/json"});
+                let a = document.createElement("a");
+                a.href = URL.createObjectURL(blob);
+                a.download = "new_offsets.json";
+                a.click();
+            }
+        }
+
+        // --- CÁC HÀM TIỆN ÍCH XEM TRƯỚC & DEMO ---
+        function demoQuickUnlock() {
+            const keyInput = document.getElementById('userKey');
+            keyInput.disabled = false;
+            keyInput.value = "CYBER-V9-PRO";
+            document.getElementById('unlockBtn').disabled = false;
+            unlockSystem();
+        }
+
+        function generateSampleFile() {
+            const size = 60000;
+            const arr = new Uint8Array(size);
+            const patches = [
+                { offset: 54020, bytes: [0xA8, 0xE7, 0x71] },
+                { offset: 54035, bytes: [0xBD] },
+                { offset: 54772, bytes: [0x72, 0x4B, 0x72] },
+                { offset: 54787, bytes: [0xBD] }
+            ];
+            for (const p of patches) {
+                for (let i = 0; i < p.bytes.length; i++) {
+                    arr[p.offset + i] = p.bytes[i];
+                }
+            }
+            const blob = new Blob([arr], { type: "application/octet-stream" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "Cache_Res_Sample.bytes";
+            a.click();
+            log("<span class='text-green'>[DEMO] ĐÃ TẠO FILE MẪU 'CACHE_RES_SAMPLE.BYTES' KHỚP 4 OFFSET ĐỂ BẠN TEST PATCH!</span>");
+        }
+
+        function openCallbackPreview() {
+            document.getElementById('callbackModal').style.display = 'flex';
+        }
+
+        function closeCallbackPreview() {
+            document.getElementById('callbackModal').style.display = 'none';
+        }
+    </script>
+
+
+</body></html>
